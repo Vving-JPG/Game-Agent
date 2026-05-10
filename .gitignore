@@ -40,6 +40,11 @@ openviking_workspace/
 .env
 .env.local
 
+# API Key configuration (contains sensitive information)
+config/keys.conf
+config/keys.conf.backup
+*.conf.backup
+
 # OS
 .DS_Store
 Thumbs.db

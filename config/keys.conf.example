@@ -1,0 +1,44 @@
+{
+  "_comment": "API Key 配置文件示例 - 复制为 keys.conf 后填入实际值",
+  "_security_notice": "此文件包含敏感信息，请勿提交到版本控制",
+  
+  "volcengine": {
+    "api_key": "your-volcengine-api-key-here",
+    "api_base": "https://ark.cn-beijing.volces.com/api/v3"
+  },
+  
+  "openai": {
+    "api_key": "your-openai-api-key-here",
+    "api_base": "https://api.openai.com/v1"
+  },
+  
+  "anthropic": {
+    "api_key": "your-anthropic-api-key-here",
+    "api_base": "https://api.anthropic.com"
+  },
+  
+  "deepseek": {
+    "api_key": "your-deepseek-api-key-here",
+    "api_base": "https://api.deepseek.com/v1"
+  },
+  
+  "gemini": {
+    "api_key": "your-gemini-api-key-here",
+    "api_base": "https://generativelanguage.googleapis.com"
+  },
+  
+  "kimi": {
+    "api_key": "your-kimi-api-key-here",
+    "api_base": "https://api.kimi.com/coding"
+  },
+  
+  "glm": {
+    "api_key": "your-glm-api-key-here",
+    "api_base": "https://api.z.ai/api/coding/paas/v4"
+  },
+  
+  "ollama": {
+    "api_key": "",
+    "api_base": "http://localhost:11434"
+  }
+}
