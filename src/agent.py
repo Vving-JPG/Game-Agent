@@ -14,6 +14,7 @@ from pathlib import Path
 from .memory_manager import MemoryManager, Memory
 from .tools import create_default_tools, ToolRegistry
 from .prompts import PromptManager, DynamicPromptBuilder
+from .progressive_prompts import ProgressivePromptBuilder, DisclosureController, DisclosureLevel
 
 
 class Agent:
@@ -48,6 +49,10 @@ class Agent:
         self.prompt_manager = PromptManager()
         self._load_prompt_templates(prompt_template)
         self.prompt_builder = DynamicPromptBuilder(self.prompt_manager)
+        
+        self.progressive_builder = ProgressivePromptBuilder()
+        self.disclosure_controller = DisclosureController()
+        self.disclosure_level = DisclosureLevel.CONTEXT
         
         self.conversation_history: List[Dict[str, str]] = []
         self.max_history = 20
