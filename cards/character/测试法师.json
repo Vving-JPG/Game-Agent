@@ -1,0 +1,27 @@
+{
+  "name": "测试法师",
+  "type": "character",
+  "description": "一个测试用的法师角色",
+  "author": "",
+  "version": "1.0.0",
+  "tags": [],
+  "metadata": {},
+  "created_at": "2026-05-10T23:40:19.818786",
+  "updated_at": "2026-05-10T23:40:19.818786",
+  "role": "配角",
+  "personality": {
+    "聪明": "智商很高",
+    "冷静": "遇事不慌"
+  },
+  "appearance": "",
+  "background": "",
+  "abilities": [
+    {
+      "name": "火球术",
+      "description": "发射火球"
+    }
+  ],
+  "relationships": [],
+  "goals": [],
+  "dialogue_style": ""
+}
