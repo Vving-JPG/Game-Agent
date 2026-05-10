@@ -75,7 +75,14 @@ class OpenVikingClient:
         if self._client is None:
             try:
                 import openviking as ov
-                # 使用系统级配置（~/.openviking/ov.conf）
+                import os
+                
+                # 使用项目内配置文件
+                project_config = Path("config/ov.conf").resolve()
+                if project_config.exists():
+                    os.environ["OPENVIKING_CONFIG_FILE"] = str(project_config)
+                    print(f"📋 使用项目配置: {project_config}")
+                
                 self._client = ov.OpenViking()
                 self._client.initialize()
                 self._initialized = True
