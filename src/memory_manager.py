@@ -63,7 +63,7 @@ class OpenVikingClient:
         
         Args:
             workspace_path: 工作空间路径
-            config_path: 配置文件路径
+            config_path: 配置文件路径（可选，默认使用系统配置）
         """
         self.workspace_path = workspace_path or "./openviking_workspace"
         self.config_path = config_path
@@ -75,14 +75,17 @@ class OpenVikingClient:
         if self._client is None:
             try:
                 import openviking as ov
-                self._client = ov.OpenViking(path=self.workspace_path)
+                # 使用系统级配置（~/.openviking/ov.conf）
+                self._client = ov.OpenViking()
                 self._client.initialize()
                 self._initialized = True
+                print("✅ OpenViking 初始化成功")
             except ImportError:
-                print("OpenViking 未安装，使用基础文件存储模式")
+                print("⚠️ OpenViking 未安装，使用基础文件存储模式")
                 self._client = None
             except Exception as e:
-                print(f"OpenViking 初始化失败: {e}")
+                print(f"⚠️ OpenViking 初始化失败: {e}")
+                print("   将使用基础文件存储模式")
                 self._client = None
         return self._client
     
@@ -107,7 +110,8 @@ class OpenVikingClient:
             return []
         
         try:
-            target_uri = uri or f"viking://memories/"
+            # OpenViking 使用标准的 resources scope
+            target_uri = uri or "viking://resources/"
             results = client.find(query, target_uri=target_uri)
             
             memories = []
@@ -146,7 +150,9 @@ class OpenVikingClient:
             with open(memory_path, "w", encoding="utf-8") as f:
                 f.write(content)
             
-            client.add_resource(path=str(memory_path))
+            # 使用正确的 URI 格式
+            resource_uri = f"viking://{memory_path}"
+            client.add_resource(uri=resource_uri, path=str(memory_path))
             return True
         except Exception as e:
             print(f"添加记忆资源失败: {e}")
@@ -265,7 +271,8 @@ class MemoryManager:
     def _semantic_retrieve(self, query: str, category: Optional[str], 
                            limit: int) -> List[Memory]:
         """语义检索"""
-        uri = f"viking://memories/{category}/" if category else "viking://memories/"
+        # OpenViking 使用 resources 作为 scope
+        uri = f"viking://resources/" if category else "viking://resources/"
         results = self.ov_client.semantic_search(query, uri=uri, limit=limit)
         
         memories = []
