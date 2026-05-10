@@ -190,4 +190,153 @@ def create_default_tools(memory_manager=None) -> ToolRegistry:
         registry.register(MemoryStoreTool(memory_manager))
         registry.register(MemoryRetrieveTool(memory_manager))
     
+    # 注册 LLM 生成工具
+    registry.register(GeneratePromptTool(None))
+    registry.register(GenerateSkillTool(None))
+    registry.register(AutoCreatePromptAndSkillTool())
+    
     return registry
+
+
+class GeneratePromptTool(Tool):
+    """LLM 生成提示词工具"""
+    
+    def __init__(self, generator):
+        super().__init__(
+            name="generate_prompt",
+            description="根据任务描述生成提示词模板",
+            parameters={
+                "task_description": {
+                    "type": "string",
+                    "description": "任务描述，例如：'帮我写一个代码审查助手'"
+                },
+                "task_type": {
+                    "type": "string",
+                    "description": "任务类型：conversation/coding/writing/analysis/gaming/teaching/creative",
+                    "default": "conversation"
+                },
+                "context": {
+                    "type": "string",
+                    "description": "额外上下文信息",
+                    "default": ""
+                }
+            }
+        )
+        self.generator = generator
+    
+    def execute(self, task_description: str, task_type: str = "conversation", 
+                context: str = "") -> str:
+        """生成提示词"""
+        try:
+            from .llm_auto_generator import PromptGenerator
+            
+            generator = PromptGenerator()
+            result = generator.generate(
+                task_type=task_type,
+                user_requirement=task_description,
+                context_info=context
+            )
+            
+            output = []
+            output.append(f"✅ 已生成提示词\n")
+            output.append(f"任务类型: {result['hints']}")
+            output.append(f"\n请使用以下提示词让 LLM 生成模板:\n")
+            output.append(result['generated_prompt'])
+            
+            return "\n".join(output)
+        except Exception as e:
+            return f"生成提示词失败: {str(e)}"
+
+
+class GenerateSkillTool(Tool):
+    """LLM 生成技能工具"""
+    
+    def __init__(self, generator):
+        super().__init__(
+            name="generate_skill",
+            description="根据需求描述生成技能定义和实现代码",
+            parameters={
+                "skill_description": {
+                    "type": "string",
+                    "description": "技能需求描述，例如：'帮我创建一个网页搜索工具'"
+                },
+                "use_case": {
+                    "type": "string",
+                    "description": "使用场景",
+                    "default": ""
+                }
+            }
+        )
+        self.generator = generator
+    
+    def execute(self, skill_description: str, use_case: str = "") -> str:
+        """生成技能"""
+        try:
+            from .llm_auto_generator import SkillGenerator
+            
+            generator = SkillGenerator()
+            result = generator.generate(
+                skill_requirement=skill_description,
+                use_case=use_case
+            )
+            
+            output = []
+            output.append(f"✅ 已生成技能生成请求\n")
+            output.append(f"\n请使用以下提示词让 LLM 生成技能定义:\n")
+            output.append(result['generated_prompt'])
+            
+            output.append(f"\n\n💡 生成技能后，你可以:")
+            output.append(f"1. 将技能定义保存到 skills/ 目录")
+            output.append(f"2. 实现技能处理函数")
+            output.append(f"3. 注册到工具系统")
+            
+            return "\n".join(output)
+        except Exception as e:
+            return f"生成技能失败: {str(e)}"
+
+
+class AutoCreatePromptAndSkillTool(Tool):
+    """自动创建提示词和技能工具"""
+    
+    def __init__(self):
+        super().__init__(
+            name="auto_create",
+            description="同时创建提示词和技能，适合复杂任务",
+            parameters={
+                "task": {
+                    "type": "string",
+                    "description": "任务描述"
+                },
+                "generation_type": {
+                    "type": "string",
+                    "description": "生成类型: prompt/skill/both",
+                    "default": "both"
+                }
+            }
+        )
+    
+    def execute(self, task: str, generation_type: str = "both") -> str:
+        """自动创建"""
+        try:
+            from .llm_auto_generator import create_llm_generation_prompt
+            
+            result = create_llm_generation_prompt(task, generation_type)
+            
+            output = []
+            output.append(f"✅ 已生成 {'提示词和技能' if generation_type == 'both' else generation_type} 创建提示词\n")
+            
+            if generation_type in ["prompt", "both"]:
+                output.append("\n【提示词生成部分】")
+            if generation_type in ["skill", "both"]:
+                output.append("\n【技能生成部分】")
+            
+            output.append(result)
+            
+            output.append(f"\n\n📝 使用说明:")
+            output.append(f"1. 将以上提示词发送给 LLM")
+            output.append(f"2. LLM 会返回 JSON/YAML 格式的定义")
+            output.append(f"3. 保存到相应文件并注册使用")
+            
+            return "\n".join(output)
+        except Exception as e:
+            return f"自动创建失败: {str(e)}"
