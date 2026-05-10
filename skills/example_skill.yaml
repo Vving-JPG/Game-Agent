@@ -1,0 +1,40 @@
+name: example_skill
+description: 示例技能定义，展示如何创建自定义技能
+version: "1.0.0"
+
+# 技能参数定义
+parameters:
+  input_text:
+    type: string
+    description: 输入文本
+    required: true
+  option:
+    type: string
+    description: 处理选项
+    required: false
+    default: "default"
+    enum:
+      - default
+      - advanced
+      - simple
+
+# 执行逻辑
+execution:
+  type: python_function
+  module: src.tools
+  function: example_skill_handler
+
+# 示例用法
+examples:
+  - input:
+      input_text: "你好，世界"
+      option: "default"
+    expected_output: "处理结果: 你好，世界"
+
+# 元数据
+metadata:
+  author: "Game-Agent Team"
+  tags:
+    - example
+    - demo
+  created_at: "2026-05-10"
