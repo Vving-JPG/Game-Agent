@@ -1,0 +1,77 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-05-10T00:00:00Z",
+  "description": "智能体提示词模板集合",
+  "templates": [
+    {
+      "name": "base_system",
+      "role": "system",
+      "description": "基础系统提示词",
+      "content": "你是一个智能助手，具备长期记忆能力和工具调用能力。\n\n记忆系统:\n- L0 工作记忆: 当前对话上下文\n- L1 短期记忆: 最近对话历史\n- L2 长期记忆: 持久化记忆（用户偏好、重要事实等）\n\n{available_tools}\n\n使用说明:\n1. 你可以使用工具来帮助用户解决问题\n2. 重要信息会自动提取并存储到长期记忆中\n3. 在回答时会自动检索相关记忆\n4. 支持语义检索，可以理解查询意图\n\n请友好，专业地回答用户的问题。",
+      "variables": ["available_tools"]
+    },
+    {
+      "name": "assistant_persona",
+      "role": "system",
+      "description": "助手人设提示词",
+      "content": "{persona_description}\n\n性格特点:\n{characteristics}\n\n交流风格:\n{communication_style}",
+      "variables": ["persona_description", "characteristics", "communication_style"]
+    },
+    {
+      "name": "memory_context",
+      "role": "context",
+      "description": "记忆上下文提示词",
+      "content": "相关记忆:\n{memories}\n\n实体信息:\n{entities}",
+      "variables": ["memories", "entities"]
+    },
+    {
+      "name": "conversation_history",
+      "role": "context",
+      "description": "对话历史提示词",
+      "content": "对话历史:\n{history}",
+      "variables": ["history"]
+    },
+    {
+      "name": "user_profile",
+      "role": "context",
+      "description": "用户画像提示词",
+      "content": "用户信息:\n- 姓名: {name}\n- 偏好: {preferences}\n- 最近关注: {recent_interests}",
+      "variables": ["name", "preferences", "recent_interests"]
+    },
+    {
+      "name": "task_instruction",
+      "role": "user",
+      "description": "任务指令提示词",
+      "content": "{task_description}\n\n要求:\n{requirements}\n\n开始执行。",
+      "variables": ["task_description", "requirements"]
+    },
+    {
+      "name": "reminder",
+      "role": "context",
+      "description": "提醒提示词",
+      "content": "重要提醒:\n{reminders}",
+      "variables": ["reminders"]
+    },
+    {
+      "name": "greeting",
+      "role": "assistant",
+      "description": "问候语模板",
+      "content": "你好！{greeting_modifier}我是你的智能助手。\n\n{capabilities_intro}",
+      "variables": ["greeting_modifier", "capabilities_intro"]
+    },
+    {
+      "name": "error_response",
+      "role": "assistant",
+      "description": "错误响应提示词",
+      "content": "抱歉，我遇到了一个问题:\n\n{error_description}\n\n{error_suggestion}",
+      "variables": ["error_description", "error_suggestion"]
+    },
+    {
+      "name": "skill_invocation",
+      "role": "context",
+      "description": "技能调用提示词",
+      "content": "需要使用技能: {skill_name}\n\n技能描述: {skill_description}\n\n参数: {parameters}\n\n执行结果: {result}",
+      "variables": ["skill_name", "skill_description", "parameters", "result"]
+    }
+  ]
+}

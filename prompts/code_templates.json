@@ -1,0 +1,28 @@
+{
+  "version": "1.0.0",
+  "name": "code_assistant",
+  "description": "代码助手提示词",
+  "templates": [
+    {
+      "name": "code_helper_system",
+      "role": "system",
+      "description": "代码助手系统提示词",
+      "content": "你是一个专业的编程助手，帮助开发者解决代码问题。\n\n支持的编程语言:\n{languages}\n\n擅长领域:\n{expertise_areas}\n\n服务内容:\n1. 代码编写和优化\n2. Bug 诊断和修复\n3. 代码审查\n4. 技术架构建议\n5. 学习路径规划\n\n{available_tools}\n\n请提供清晰、高效的解决方案。",
+      "variables": ["languages", "expertise_areas", "available_tools"]
+    },
+    {
+      "name": "code_review",
+      "role": "context",
+      "description": "代码审查提示词",
+      "content": "待审查代码:\n```{language}\n{code}\n```\n\n代码上下文:\n{context}\n\n审查重点:\n{review_focus}",
+      "variables": ["language", "code", "context", "review_focus"]
+    },
+    {
+      "name": "bug_diagnosis",
+      "role": "context",
+      "description": "Bug 诊断提示词",
+      "content": "错误信息:\n```\n{error_message}\n```\n\n相关代码:\n```{language}\n{code_snippet}\n```\n\n错误复现步骤:\n{reproduction_steps}\n\n环境信息:\n{environment}",
+      "variables": ["error_message", "language", "code_snippet", "reproduction_steps", "environment"]
+    }
+  ]
+}

@@ -8,6 +8,7 @@
 - **语义检索**: 集成 OpenViking 语义搜索，理解查询意图
 - **自动记忆提取**: 从对话中自动识别并存储用户偏好、姓名等信息
 - **对话压缩**: 自动压缩历史对话，提取关键信息
+- **提示词管理**: 结构化的提示词模板系统，支持多角色、多场景
 - **工具调用**: 可扩展的工具系统，内置时间、计算、记忆等工具
 - **多轮对话**: 维护对话历史，支持上下文理解
 - **技能定义**: YAML 格式的技能配置文件
@@ -22,9 +23,14 @@ Game-Agent/
 │   ├── __init__.py          # 包初始化
 │   ├── agent.py             # 智能体核心类
 │   ├── memory_manager.py    # 记忆管理模块（支持语义检索）
+│   ├── prompts.py           # 提示词管理模块
 │   └── tools.py             # 工具定义和注册
 ├── skills/
 │   └── example_skill.yaml   # 技能定义示例
+├── prompts/
+│   ├── default_templates.json  # 默认提示词模板
+│   ├── gaming_templates.json   # 游戏助手模板
+│   └── code_templates.json     # 代码助手模板
 ├── main.py                  # 入口程序
 ├── requirements.txt         # 依赖列表
 └── README.md               # 项目说明
@@ -241,6 +247,53 @@ execution:
   type: python_function
   module: src.tools
   function: my_skill_handler
+```
+
+### 提示词模板管理
+
+使用提示词管理器来组织和渲染提示词:
+
+```python
+from src.prompts import PromptManager, DynamicPromptBuilder
+
+# 初始化
+prompt_manager = PromptManager()
+
+# 加载模板
+prompt_manager.load_from_file("prompts/default_templates.json")
+
+# 渲染模板
+system_prompt = prompt_manager.build_system_prompt(
+    tools="工具描述",
+    memories="相关记忆",
+    entities="实体信息"
+)
+
+# 动态构建提示词
+builder = DynamicPromptBuilder(prompt_manager)
+context_prompt = builder.build_context_prompt(
+    query="用户查询",
+    memories=[...],
+    entity_cache={...}
+)
+```
+
+### 切换提示词模板
+
+```python
+# 切换到游戏助手模板
+agent.set_prompt_template("gaming")
+
+# 切换到代码助手模板
+agent.set_prompt_template("code")
+
+# 添加自定义模板
+agent.add_custom_prompt(
+    name="my_template",
+    role="system",
+    content="自定义提示词内容 {variable}",
+    variables=["variable"]
+)
 ```
 
 ## API 参考

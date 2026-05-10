@@ -3,6 +3,7 @@
 
 基于 OpenViking 的智能体主类，集成记忆管理和工具调用
 支持分层记忆、自动提取和语义检索
+支持结构化的提示词管理和动态生成
 """
 
 import os
@@ -12,6 +13,7 @@ from pathlib import Path
 
 from .memory_manager import MemoryManager, Memory
 from .tools import create_default_tools, ToolRegistry
+from .prompts import PromptManager, DynamicPromptBuilder
 
 
 class Agent:
@@ -20,15 +22,18 @@ class Agent:
     
     具备长期记忆、工具调用和多轮对话能力的智能体
     支持分层记忆结构 (L0/L1/L2) 和自动记忆提取
+    支持结构化的提示词管理和动态生成
     """
     
-    def __init__(self, config_path: str = "config/ov.conf", use_openviking: bool = True):
+    def __init__(self, config_path: str = "config/ov.conf", use_openviking: bool = True,
+                 prompt_template: str = "base"):
         """
         初始化智能体
         
         Args:
             config_path: 配置文件路径
             use_openviking: 是否启用 OpenViking 语义检索
+            prompt_template: 提示词模板类型 (base/gaming/code)
         """
         self.config_path = Path(config_path)
         self.config = self._load_config()
@@ -40,6 +45,10 @@ class Agent:
         
         self.tools = create_default_tools(self.memory_manager)
         
+        self.prompt_manager = PromptManager()
+        self._load_prompt_templates(prompt_template)
+        self.prompt_builder = DynamicPromptBuilder(self.prompt_manager)
+        
         self.conversation_history: List[Dict[str, str]] = []
         self.max_history = 20
         
@@ -47,6 +56,15 @@ class Agent:
         self._entity_cache: Dict[str, Any] = {}
         
         self.system_prompt = self._create_system_prompt()
+    
+    def _load_prompt_templates(self, template_type: str):
+        """加载提示词模板"""
+        if template_type == "gaming":
+            self.prompt_manager.load_from_file("prompts/gaming_templates.json")
+        elif template_type == "code":
+            self.prompt_manager.load_from_file("prompts/code_templates.json")
+        else:
+            self.prompt_manager.load_from_file("prompts/default_templates.json")
     
     def _load_config(self) -> Dict[str, Any]:
         """加载配置文件"""
@@ -71,23 +89,50 @@ class Agent:
         """创建系统提示词"""
         tools_desc = json.dumps(self.tools.list_tools(), ensure_ascii=False, indent=2)
         
-        return f"""你是一个智能助手，具备长期记忆能力和工具调用能力。
-
-记忆系统:
-- L0 工作记忆: 当前对话上下文
-- L1 短期记忆: 最近对话历史
-- L2 长期记忆: 持久化记忆（用户偏好、重要事实等）
-
-可用工具:
-{tools_desc}
-
-使用说明:
-1. 你可以使用工具来帮助用户解决问题
-2. 重要信息会自动提取并存储到长期记忆中
-3. 在回答时会自动检索相关记忆
-4. 支持语义检索，可以理解查询意图
-
-请友好、专业地回答用户的问题。"""
+        return self.prompt_manager.build_system_prompt(
+            tools=tools_desc,
+            memories="",
+            entities=""
+        )
+    
+    def build_full_prompt(self, query: str, include_history: bool = True) -> Dict[str, str]:
+        """
+        构建完整的提示词上下文
+        
+        Args:
+            query: 用户查询
+            include_history: 是否包含对话历史
+            
+        Returns:
+            Dict[str, str]: 包含 system 和 user 提示词的字典
+        """
+        user_parts = []
+        
+        if include_history and self.conversation_history:
+            history = self.prompt_builder.prompt_manager.build_conversation_context(
+                self.conversation_history
+            )
+            if history:
+                user_parts.append(history)
+        
+        memories = self.memory_manager.retrieve(query, limit=3, use_semantic=False)
+        if memories:
+            memory_lines = []
+            for mem in memories:
+                memory_lines.append(f"- [{mem.category}] {mem.content}")
+            user_parts.append("相关记忆:\n" + "\n".join(memory_lines))
+        
+        if self._entity_cache:
+            profile = self.prompt_builder.prompt_manager.build_user_profile(self._entity_cache)
+            if profile:
+                user_parts.append("用户信息:\n" + profile)
+        
+        user_parts.append(query)
+        
+        return {
+            "system": self.system_prompt,
+            "user": "\n\n".join(user_parts)
+        }
     
     def chat(self, message: str) -> str:
         """
@@ -218,6 +263,7 @@ class Agent:
         response_parts.append("- 输入 '/tools' 查看可用工具")
         response_parts.append("- 输入 '/memory' 查看记忆统计")
         response_parts.append("- 输入 '/entities' 查看已记住的实体")
+        response_parts.append("- 输入 '/prompts' 查看提示词模板")
         response_parts.append("- 输入 '记住 xxx' 存储记忆")
         response_parts.append("- 输入 '回忆 xxx' 检索记忆")
         
@@ -234,6 +280,7 @@ class Agent:
 /memory - 显示记忆统计
 /entities - 显示已记住的实体
 /history - 显示对话历史
+/prompts - 显示提示词模板
 /clear - 清空对话历史
 /compress - 压缩对话历史
 
@@ -273,6 +320,14 @@ class Agent:
             parts = ["已记住的实体:"]
             for entity_type, value in self._entity_cache.items():
                 parts.append(f"  {entity_type}: {value}")
+            return "\n".join(parts)
+        
+        elif cmd == "/prompts":
+            templates = self.prompt_manager.list_templates()
+            parts = ["可用提示词模板:"]
+            for t in templates:
+                parts.append(f"\n  {t['name']} [{t['role']}]:")
+                parts.append(f"    {t['description']}")
             return "\n".join(parts)
         
         elif cmd == "/history":
@@ -365,8 +420,40 @@ class Agent:
             "conversation_turns": len(self.conversation_history) // 2,
             "working_memory_size": len(self._working_memory),
             "entities_count": len(self._entity_cache),
-            "tools_count": len(self.tools.list_tools())
+            "tools_count": len(self.tools.list_tools()),
+            "prompt_templates_count": len(self.prompt_manager.list_templates())
         }
+    
+    def set_prompt_template(self, template_type: str):
+        """
+        切换提示词模板
+        
+        Args:
+            template_type: 模板类型 (base/gaming/code)
+        """
+        self._load_prompt_templates(template_type)
+        self.system_prompt = self._create_system_prompt()
+    
+    def add_custom_prompt(self, name: str, role: str, content: str, 
+                          variables: List[str] = None):
+        """
+        添加自定义提示词模板
+        
+        Args:
+            name: 模板名称
+            role: 角色 (system/user/assistant/context)
+            content: 模板内容
+            variables: 变量列表
+        """
+        from .prompts import PromptRole, PromptTemplate
+        
+        template = PromptTemplate(
+            name=name,
+            role=PromptRole(role),
+            content=content,
+            variables=variables or []
+        )
+        self.prompt_manager.register(template)
     
     def close(self):
         """关闭资源"""
