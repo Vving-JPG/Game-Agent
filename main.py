@@ -1,35 +1,37 @@
 #!/usr/bin/env python3
 """
-OpenViking Agent 入口程序
+RPG 游戏内容生成器
 
-基于火山引擎 OpenViking 的智能体应用
+基于 OpenViking 的 RPG 游戏道具、NPC、任务生成工具
 """
 
 import sys
 import argparse
+import json
 from pathlib import Path
 
 # 添加 src 到路径
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.agent import Agent
+from src.rpg_generator import RPGGenerator
+from src.text_renderer import renderer
 
 
 def print_banner():
     """打印欢迎信息"""
     banner = """
 ╔══════════════════════════════════════════════════════════════╗
-║                   OpenViking Agent                           ║
-║          基于火山引擎 OpenViking 的智能体框架                 ║
+║                   RPG 游戏内容生成器                          ║
+║              基于 OpenViking 的智能生成工具                   ║
 ╚══════════════════════════════════════════════════════════════╝
     """
-    print(banner)
+    renderer.show_instant(banner)
 
 
-def interactive_mode(agent: Agent):
-    """交互式对话模式"""
+def interactive_mode(generator: RPGGenerator):
+    """交互式生成模式"""
     print_banner()
-    print("智能体已启动！输入 /help 查看可用命令，输入 exit 退出。\n")
+    renderer.show("生成器已启动！输入 /help 查看可用命令，输入 exit 退出。\n")
     
     while True:
         try:
@@ -42,83 +44,184 @@ def interactive_mode(agent: Agent):
             
             # 退出命令
             if user_input.lower() in ["exit", "quit", "退出"]:
-                print("\n感谢使用，再见！")
+                renderer.show("\n感谢使用，再见！")
                 break
             
-            # 发送消息给智能体
-            response = agent.chat(user_input)
+            # 帮助命令
+            if user_input.lower() in ["/help", "帮助"]:
+                help_text = """
+可用命令:
+  /item <等级> <稀有度> [类型]     - 生成道具
+  /npc <地点> <角色定位> [重要程度] - 生成NPC
+  /quest <类型> <难度> <等级> <地点> - 生成任务
+  /search <关键词>                  - 搜索记忆库
+  /help                            - 显示帮助
+  exit/quit/退出                    - 退出程序
+
+示例:
+  /item 5 稀有 武器
+  /npc 边境小镇 商人 次要
+  /quest 支线 普通 5 森林
+  /search 火焰
+"""
+                renderer.show_instant(help_text)
+                continue
             
-            # 显示回复
-            print(f"\n助手 > {response}\n")
+            # 生成道具
+            if user_input.startswith("/item"):
+                parts = user_input.split(maxsplit=3)
+                if len(parts) < 3:
+                    renderer.show("用法: /item <等级> <稀有度> [类型]")
+                    continue
+                level = int(parts[1])
+                rarity = parts[2]
+                item_type = parts[3] if len(parts) > 3 else "武器"
+                result = generator.generate_item(level, rarity, item_type)
+                renderer.show_instant(f"\n🎁 生成道具:\n{json.dumps(result, ensure_ascii=False, indent=2)}\n")
+                continue
+            
+            # 生成NPC
+            if user_input.startswith("/npc"):
+                parts = user_input.split(maxsplit=3)
+                if len(parts) < 3:
+                    renderer.show("用法: /npc <地点> <角色定位> [重要程度]")
+                    continue
+                location = parts[1]
+                role = parts[2]
+                importance = parts[3] if len(parts) > 3 else "次要"
+                result = generator.generate_npc(location, role, importance)
+                renderer.show_instant(f"\n👤 生成NPC:\n{json.dumps(result, ensure_ascii=False, indent=2)}\n")
+                continue
+            
+            # 生成任务
+            if user_input.startswith("/quest"):
+                parts = user_input.split(maxsplit=4)
+                if len(parts) < 4:
+                    renderer.show("用法: /quest <类型> <难度> <玩家等级> <地点>")
+                    continue
+                quest_type = parts[1]
+                difficulty = parts[2]
+                level = int(parts[3])
+                location = parts[4] if len(parts) > 4 else "森林"
+                result = generator.generate_quest(quest_type, difficulty, level, location)
+                renderer.show_instant(f"\n📜 生成任务:\n{json.dumps(result, ensure_ascii=False, indent=2)}\n")
+                continue
+            
+            # 搜索记忆
+            if user_input.startswith("/search"):
+                keyword = user_input[7:].strip()
+                if not keyword:
+                    renderer.show("用法: /search <关键词>")
+                    continue
+                results = generator.search_memories(keyword)
+                renderer.show_instant(f"\n🔍 搜索结果:\n{json.dumps(results, ensure_ascii=False, indent=2)}\n")
+                continue
+            
+            # 默认：智能生成
+            response = generator.chat(user_input)
+            renderer.show(f"\n🤖 {response}\n")
             
         except KeyboardInterrupt:
-            print("\n\n检测到中断，正在退出...")
+            renderer.show("\n\n检测到中断，正在退出...")
             break
         except Exception as e:
-            print(f"\n错误: {e}\n")
+            renderer.show(f"\n❌ 错误: {e}\n")
 
 
-def single_mode(agent: Agent, message: str):
-    """单次对话模式"""
-    response = agent.chat(message)
-    print(response)
+def print_help():
+    """打印帮助信息"""
+    help_text = """
+可用命令:
+  /item <等级> <稀有度> [类型]     - 生成道具
+  /npc <地点> <角色定位> [重要程度] - 生成NPC
+  /quest <类型> <难度> <等级> <地点> - 生成任务
+  /search <关键词>                  - 搜索记忆库
+  /help                            - 显示帮助
+  exit/quit/退出                    - 退出程序
+
+示例:
+  /item 5 稀有 武器
+  /npc 边境小镇 商人 次要
+  /quest 支线 普通 5 森林
+  /search 火焰
+"""
+    print(help_text)
 
 
 def main():
     """主函数"""
     parser = argparse.ArgumentParser(
-        description="OpenViking Agent - 智能体应用",
+        description="RPG 游戏内容生成器",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
-  python main.py                    # 启动交互式对话
-  python main.py -m "你好"          # 单次对话模式
-  python main.py -c config/ov.conf  # 指定配置文件
+  python main.py                    # 启动交互式模式
+  python main.py -i 5 稀有 武器      # 生成道具
+  python main.py -n 边境小镇 商人    # 生成NPC
+  python main.py -q 支线 普通 5 森林 # 生成任务
         """
     )
     
     parser.add_argument(
         "-c", "--config",
-        default="config/ov.conf",
-        help="配置文件路径 (默认: config/ov.conf)"
+        default="openviking_workspace/ov.conf",
+        help="OpenViking 配置文件路径"
     )
     
     parser.add_argument(
-        "-m", "--message",
-        help="单次对话模式，直接传入消息内容"
+        "-i", "--item",
+        nargs="*",
+        help="生成道具: <等级> <稀有度> [类型]"
     )
     
     parser.add_argument(
-        "--stats",
-        action="store_true",
-        help="显示智能体统计信息"
+        "-n", "--npc",
+        nargs="*",
+        help="生成NPC: <地点> <角色定位> [重要程度]"
+    )
+    
+    parser.add_argument(
+        "-q", "--quest",
+        nargs="*",
+        help="生成任务: <类型> <难度> <等级> <地点>"
     )
     
     args = parser.parse_args()
     
     try:
-        # 初始化智能体
-        agent = Agent(config_path=args.config)
+        # 初始化生成器
+        generator = RPGGenerator(config_path=args.config)
         
-        # 显示统计信息
-        if args.stats:
-            stats = agent.get_stats()
-            print("智能体统计信息:")
-            print(f"  工作空间: {stats['workspace']}")
-            print(f"  对话轮数: {stats['conversation_turns']}")
-            print(f"  工具数量: {stats['tools_count']}")
-            print("  记忆统计:")
-            for category, count in stats['memory_stats'].items():
-                print(f"    {category}: {count}")
+        # 生成道具模式
+        if args.item:
+            level = int(args.item[0]) if len(args.item) > 0 else 1
+            rarity = args.item[1] if len(args.item) > 1 else "普通"
+            item_type = args.item[2] if len(args.item) > 2 else "武器"
+            result = generator.generate_item(level, rarity, item_type)
+            print(json.dumps(result, ensure_ascii=False, indent=2))
             return
         
-        # 单次对话模式
-        if args.message:
-            single_mode(agent, args.message)
+        # 生成NPC模式
+        if args.npc:
+            location = args.npc[0] if len(args.npc) > 0 else "村庄"
+            role = args.npc[1] if len(args.npc) > 1 else "村民"
+            importance = args.npc[2] if len(args.npc) > 2 else "次要"
+            result = generator.generate_npc(location, role, importance)
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+            return
+        
+        # 生成任务模式
+        if args.quest:
+            quest_type = args.quest[0] if len(args.quest) > 0 else "支线"
+            difficulty = args.quest[1] if len(args.quest) > 1 else "普通"
+            level = int(args.quest[2]) if len(args.quest) > 2 else 1
+            location = args.quest[3] if len(args.quest) > 3 else "森林"
+            result = generator.generate_quest(quest_type, difficulty, level, location)
+            print(json.dumps(result, ensure_ascii=False, indent=2))
             return
         
         # 交互式模式
-        interactive_mode(agent)
+        interactive_mode(generator)
         
     except Exception as e:
         print(f"启动失败: {e}")
