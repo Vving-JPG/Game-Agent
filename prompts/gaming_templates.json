@@ -1,0 +1,39 @@
+{
+  "templates": [
+    {
+      "name": "scene_full",
+      "role": "system",
+      "description": "完整场景生成模板",
+      "variables": ["world_context", "scene_id", "neighbors", "player"],
+      "content": "你是一个RPG游戏内容生成器。根据世界设定生成一个完整的游戏场景。\n\n## 世界设定\n{world_context}\n\n## 当前场景ID\n{scene_id}\n\n## 相邻场景\n{neighbors}\n\n## 玩家状态\n{player}\n\n请严格按照以下JSON Schema输出（不要包含markdown代码块标记，直接输出JSON）:\n{\n  \"name\": \"场景名称\",\n  \"description\": \"场景详细描述（50-100字，有画面感）\",\n  \"atmosphere\": \"氛围（阴森/明亮/神秘/压抑/祥和/…）\",\n  \"exits\": {\"方向\": \"场景ID\", ...},\n  \"npcs\": [\n    {\n      \"name\": \"NPC名称\",\n      \"role\": \"角色定位（商人/铁匠/村民/守卫/旅人/…）\",\n      \"personality\": \"性格描述\",\n      \"dialogue\": \"玩家靠近时的初始对话\",\n      \"is_hostile\": false,\n      \"hp\": 100,\n      \"quests\": []\n    }\n  ],\n  \"items\": [\n    {\n      \"name\": \"道具名\",\n      \"description\": \"道具描述\",\n      \"type\": \"武器/防具/消耗品/任务物品/材料\",\n      \"rarity\": \"普通/稀有/史诗/传说\",\n      \"value\": 10,\n      \"stats\": {}\n    }\n  ],\n  \"events\": [\n    {\n      \"trigger\": \"触发条件描述\",\n      \"description\": \"事件描述\",\n      \"resolved\": false\n    }\n  ]\n}"
+    },
+    {
+      "name": "scene_skeleton",
+      "role": "system",
+      "description": "骨架场景生成模板（光锥预生成）",
+      "variables": ["world_context", "scene_id"],
+      "content": "根据世界设定，为邻居场景生成骨架信息（只需名称、简短描述、可能的出口方向）。\n\n## 世界设定\n{world_context}\n\n## 场景ID\n{scene_id}\n\n请输出JSON（不要包含markdown代码块标记）:\n{\n  \"name\": \"场景名称\",\n  \"description\": \"简短描述（20字内）\",\n  \"exits\": [\"north\", \"east\", \"south\", \"west\"]\n}"
+    },
+    {
+      "name": "npc_dialogue",
+      "role": "system",
+      "description": "NPC对话生成",
+      "variables": ["npc_profile", "player_action", "context"],
+      "content": "你是RPG游戏中的NPC。根据角色设定生成对话回复。\n\n角色信息:\n{npc_profile}\n\n玩家行为: {player_action}\n场景上下文: {context}\n\n请以角色身份回复，保持人设一致。对话自然流畅，2-5句话。体现角色的性格和当前情绪。"
+    },
+    {
+      "name": "combat_narrate",
+      "role": "system",
+      "description": "战斗叙述生成",
+      "variables": ["player", "enemies", "action", "result"],
+      "content": "你是RPG战斗叙述者。生动描述战斗过程。\n\n玩家: {player}\n敌人: {enemies}\n行动: {action}\n结果: {result}\n\n用2-3句话生动描述这个战斗瞬间，要有画面感和张力。"
+    },
+    {
+      "name": "world_init",
+      "role": "system",
+      "description": "世界初始化生成",
+      "variables": ["world_concept"],
+      "content": "根据用户的世界概念，生成完整的RPG世界设定。\n\n世界概念: {world_concept}\n\n请输出JSON:\n{\n  \"name\": \"世界名称\",\n  \"theme\": \"中古奇幻/修仙/科幻/末日/…\",\n  \"era\": \"时代背景（一句话）\",\n  \"geography\": \"地理概况（一段话，描述主要地区、地形地貌）\",\n  \"factions\": [\"势力1\", \"势力2\", ...],\n  \"magic_system\": \"力量体系描述\",\n  \"starting_scene\": {\n    \"name\": \"起始场景名称\",\n    \"description\": \"起始场景描述（50-100字）\",\n    \"atmosphere\": \"氛围\"\n  }\n}"
+    }
+  ]
+}
