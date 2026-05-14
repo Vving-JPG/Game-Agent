@@ -1,0 +1,8 @@
+2026-05-13 23:30:18,865 [INFO ] game_agent: Game-Agent v2 启动
+2026-05-13 23:30:24,293 [INFO ] game_agent: 技能系统: 加载了 1 个技能
+2026-05-13 23:30:24,294 [INFO ] game_agent: 记忆系统已启用
+2026-05-13 23:44:59,459 [INFO ] game_agent: Game-Agent v2 启动
+2026-05-13 23:45:01,341 [INFO ] game_agent: 技能系统: 加载了 1 个技能
+2026-05-13 23:45:01,342 [INFO ] game_agent: 记忆系统已启用
+2026-05-13 23:45:01,386 [INFO ] game_agent: RAG 知识库: 已加载 1 个文档
+2026-05-13 23:45:48,274 [INFO ] game_agent: 切换到提示词: GM_PROMPT.md

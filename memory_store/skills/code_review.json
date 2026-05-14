@@ -1,0 +1,48 @@
+{
+  "name": "python_basics",
+  "description": "Python 编程基础技能：提供代码审查、Python 相关文件搜索能力",
+  "system_prompt": "你擅长 Python 编程。当回答 Python 相关问题时应引用 PEP 8 规范，给出可运行的代码示例。",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "review_code",
+        "description": "对指定的 Python 文件进行代码审查，指出潜在问题和改进建议。",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "要审查的 Python 文件路径"
+            }
+          },
+          "required": ["path"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "find_imports",
+        "description": "查找 Python 文件中的所有 import 语句。",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "要分析的 Python 文件路径"
+            }
+          },
+          "required": ["path"]
+        }
+      }
+    }
+  ],
+  "examples": [
+    "帮我审查 terminal_chat.py",
+    "这个函数的性能如何优化？",
+    "列出所有依赖的模块"
+  ],
+  "created_at": "2026-05-13",
+  "enabled": true
+}

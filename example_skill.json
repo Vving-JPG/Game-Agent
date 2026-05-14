@@ -1,0 +1,9 @@
+{
+  "name": "example_skill",
+  "description": "技能模板 - 复制此文件到 memory_store/skills/ 并自定义",
+  "system_prompt": "",
+  "tools": [],
+  "examples": [],
+  "created_at": "2026-05-13",
+  "enabled": false
+}
